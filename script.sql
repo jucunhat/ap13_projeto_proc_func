@@ -1,29 +1,56 @@
--- 1.5.2 Responde (devolve boolean) se é verdade que, entre os estudantes que fazem
--- anotações pelo menos algumas vezes durante as aulas, pelo menos 70% são aprovados
--- (grade > 0).
-CREATE OR REPLACE FUNCTION fn_aprovados_70_perc() RETURNS BOOLEAN AS $$
+-- 1.5.3 Devolve o percentual de alunos que se preparam pelo menos um pouco para os “midterm exams” e que são aprovados (grade > 0)
+DROP ROUTINE fn_prep_midexams
+CREATE FUNCTION fn_prep_midexams(IN prep INT, IN nota INT) RETURNS NUMERIC(10, 2)
+LANGUAGE plpgsql
+AS $$
 DECLARE
-    total_estudantes INTEGER;
-    aprovados INTEGER;
+	contagem INT;
+	contagem_tot INT;
+	resultado NUMERIC(10, 2);
 BEGIN
-    SELECT COUNT(*) INTO total_estudantes FROM tb_projeto WHERE NOTES > 1;
-    SELECT COUNT(*) INTO aprovados FROM tb_projeto WHERE NOTES > 1 AND GRADE > 0;
-    
-    IF aprovados >= total_estudantes * 0.7 THEN
-        RETURN TRUE;
-    ELSE
-        RETURN FALSE;
-    END IF;
-END; $$
-LANGUAGE plpgsql;
+	SELECT COUNT(*) FROM tb_projeto INTO contagem_tot;
+	SELECT COUNT(PREP_EXAM) FROM tb_projeto s WHERE s.PREP_EXAM < 3 AND GRADE > 0 INTO contagem;
+	
+	resultado = (contagem / CAST(contagem_tot AS NUMERIC)) * 100;
+	RETURN resultado;
+END;
+$$
 
 DO $$
 DECLARE
-    aprovados_70perc BOOLEAN;
+	resultado NUMERIC(10, 2);
 BEGIN
-    aprovados_70perc := fn_aprovados_70_perc();
-    RAISE NOTICE 'Pelo menos 70%% dos estudantes que fazem anotações pelo menos algumas vezes durante as aulas são aprovados: %', aprovados_70perc;
-END $$;
+	resultado := fn_prep_midexams(1, 2);
+	RAISE NOTICE 'O percentual de alunos que se prepararam pelo menos um pouco para os midterm exams e foram aprovados é de % %%', resultado;
+END;
+$$
+
+-- -- 1.5.2 Responde (devolve boolean) se é verdade que, entre os estudantes que fazem
+-- -- anotações pelo menos algumas vezes durante as aulas, pelo menos 70% são aprovados
+-- -- (grade > 0).
+-- CREATE OR REPLACE FUNCTION fn_aprovados_70_perc() RETURNS BOOLEAN AS $$
+-- DECLARE
+--     total_estudantes INTEGER;
+--     aprovados INTEGER;
+-- BEGIN
+--     SELECT COUNT(*) INTO total_estudantes FROM tb_projeto WHERE NOTES > 1;
+--     SELECT COUNT(*) INTO aprovados FROM tb_projeto WHERE NOTES > 1 AND GRADE > 0;
+    
+--     IF aprovados >= total_estudantes * 0.7 THEN
+--         RETURN TRUE;
+--     ELSE
+--         RETURN FALSE;
+--     END IF;
+-- END; $$
+-- LANGUAGE plpgsql;
+
+-- DO $$
+-- DECLARE
+--     aprovados_70perc BOOLEAN;
+-- BEGIN
+--     aprovados_70perc := fn_aprovados_70_perc();
+--     RAISE NOTICE 'Pelo menos 70%% dos estudantes que fazem anotações pelo menos algumas vezes durante as aulas são aprovados: %', aprovados_70perc;
+-- END $$;
 
 -- -- 1.5.1 Responde (devolve boolean) se é verdade que todos os estudantes de renda acima de
 -- -- 410 são aprovados (grade > 0).
