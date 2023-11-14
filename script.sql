@@ -1,25 +1,52 @@
--- 1.5.1 Responde (devolve boolean) se é verdade que todos os estudantes de renda acima de
--- 410 são aprovados (grade > 0).
-CREATE OR REPLACE FUNCTION fn_estudantes_aprovados() RETURNS BOOLEAN AS $$
+-- 1.5.2 Responde (devolve boolean) se é verdade que, entre os estudantes que fazem
+-- anotações pelo menos algumas vezes durante as aulas, pelo menos 70% são aprovados
+-- (grade > 0).
+CREATE OR REPLACE FUNCTION fn_aprovados_70_perc() RETURNS BOOLEAN AS $$
 DECLARE
-    estudante RECORD;
+    total_estudantes INTEGER;
+    aprovados INTEGER;
 BEGIN
-    FOR estudante IN SELECT * FROM tb_projeto  WHERE SALARY >= 5 LOOP
-        IF estudante.GRADE > 0 THEN
-            RETURN FALSE;
-        END IF;
-    END LOOP;
-    RETURN TRUE;
+    SELECT COUNT(*) INTO total_estudantes FROM tb_projeto WHERE NOTES > 1;
+    SELECT COUNT(*) INTO aprovados FROM tb_projeto WHERE NOTES > 1 AND GRADE > 0;
+    
+    IF aprovados >= total_estudantes * 0.7 THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
 END; $$
 LANGUAGE plpgsql;
 
 DO $$
 DECLARE
-    aprovados BOOLEAN;
+    aprovados_70perc BOOLEAN;
 BEGIN
-    aprovados := fn_estudantes_aprovados();
-    RAISE NOTICE 'Todos os estudantes com renda acima de 410 são aprovados: %', aprovados;
+    aprovados_70perc := fn_aprovados_70_perc();
+    RAISE NOTICE 'Pelo menos 70%% dos estudantes que fazem anotações pelo menos algumas vezes durante as aulas são aprovados: %', aprovados_70perc;
 END $$;
+
+-- -- 1.5.1 Responde (devolve boolean) se é verdade que todos os estudantes de renda acima de
+-- -- 410 são aprovados (grade > 0).
+-- CREATE OR REPLACE FUNCTION fn_estudantes_aprovados() RETURNS BOOLEAN AS $$
+-- DECLARE
+--     estudante RECORD;
+-- BEGIN
+--     FOR estudante IN SELECT * FROM tb_projeto  WHERE SALARY >= 5 LOOP
+--         IF estudante.GRADE > 0 THEN
+--             RETURN FALSE;
+--         END IF;
+--     END LOOP;
+--     RETURN TRUE;
+-- END; $$
+-- LANGUAGE plpgsql;
+
+-- DO $$
+-- DECLARE
+--     aprovados BOOLEAN;
+-- BEGIN
+--     aprovados := fn_estudantes_aprovados();
+--     RAISE NOTICE 'Todos os estudantes com renda acima de 410 são aprovados: %', aprovados;
+-- END $$;
 
 -- -- 1.4.3 Recebe um sexo como parâmetro em modo IN e utiliza oito parâmetros em modo OUT
 -- -- para dizer qual o percentual de cada nota (variável grade) obtida por estudantes daquele
