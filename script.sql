@@ -1,58 +1,81 @@
--- 1.4.3 Recebe um sexo como parâmetro em modo IN e utiliza oito parâmetros em modo OUT
--- para dizer qual o percentual de cada nota (variável grade) obtida por estudantes daquele
--- sexo.
-DROP PROCEDURE sp_percentuais
-CREATE OR REPLACE PROCEDURE sp_percentuais(p_gender INTEGER, OUT grade1_percent NUMERIC (10, 2), 
-										   OUT grade2_percent NUMERIC(10, 2), OUT grade3_percent NUMERIC(10, 2), 
-										   OUT grade4_percent NUMERIC(10, 2), OUT grade5_percent NUMERIC(10, 2), 
-										   OUT grade6_percent NUMERIC(10, 2), OUT grade7_percent NUMERIC(10, 2), 
-										   OUT grade8_percent NUMERIC(10, 2))
-AS $$
+-- 1.5.1 Responde (devolve boolean) se é verdade que todos os estudantes de renda acima de
+-- 410 são aprovados (grade > 0).
+CREATE OR REPLACE FUNCTION fn_estudantes_aprovados() RETURNS BOOLEAN AS $$
 DECLARE
-    total_de_estudantes INTEGER;
+    estudante RECORD;
 BEGIN
-    SELECT COUNT(*) INTO total_de_estudantes FROM tb_projeto WHERE GENDER = p_gender;
-
-    SELECT COUNT(*) INTO grade1_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 1;
-    grade1_percent := (grade1_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade2_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 2;
-    grade2_percent := (grade2_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade3_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 3;
-    grade3_percent := (grade3_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade4_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 4;
-    grade4_percent := (grade4_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade5_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 5;
-    grade5_percent := (grade5_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade6_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 6;
-    grade6_percent := (grade6_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade7_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 7;
-    grade7_percent := (grade7_percent::NUMERIC / total_de_estudantes) * 100;
-
-    SELECT COUNT(*) INTO grade8_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 8;
-    grade8_percent := (grade8_percent::NUMERIC / total_de_estudantes) * 100;
+    FOR estudante IN SELECT * FROM tb_projeto  WHERE SALARY >= 5 LOOP
+        IF estudante.GRADE > 0 THEN
+            RETURN FALSE;
+        END IF;
+    END LOOP;
+    RETURN TRUE;
 END; $$
 LANGUAGE plpgsql;
 
 DO $$
 DECLARE
-    grade1_percent NUMERIC(10, 2);
-    grade2_percent NUMERIC(10, 2);
-    grade3_percent NUMERIC(10, 2);
-    grade4_percent NUMERIC(10, 2);
-    grade5_percent NUMERIC(10, 2);
-    grade6_percent NUMERIC(10, 2);
-    grade7_percent NUMERIC(10, 2);
-    grade8_percent NUMERIC(10, 2);
+    aprovados BOOLEAN;
 BEGIN
-    CALL sp_percentuais(1, grade1_percent, grade2_percent, grade3_percent, grade4_percent, grade5_percent, grade6_percent, grade7_percent, grade8_percent);
-    RAISE NOTICE 'Percentuais de notas para o sexo: %, %, %, %, %, %, %, %', grade1_percent, grade2_percent, grade3_percent, grade4_percent, grade5_percent, grade6_percent, grade7_percent, grade8_percent;
+    aprovados := fn_estudantes_aprovados();
+    RAISE NOTICE 'Todos os estudantes com renda acima de 410 são aprovados: %', aprovados;
 END $$;
+
+-- -- 1.4.3 Recebe um sexo como parâmetro em modo IN e utiliza oito parâmetros em modo OUT
+-- -- para dizer qual o percentual de cada nota (variável grade) obtida por estudantes daquele
+-- -- sexo.
+-- DROP PROCEDURE sp_percentuais
+-- CREATE OR REPLACE PROCEDURE sp_percentuais(p_gender INTEGER, OUT grade1_percent NUMERIC (10, 2), 
+-- 										   OUT grade2_percent NUMERIC(10, 2), OUT grade3_percent NUMERIC(10, 2), 
+-- 										   OUT grade4_percent NUMERIC(10, 2), OUT grade5_percent NUMERIC(10, 2), 
+-- 										   OUT grade6_percent NUMERIC(10, 2), OUT grade7_percent NUMERIC(10, 2), 
+-- 										   OUT grade8_percent NUMERIC(10, 2))
+-- AS $$
+-- DECLARE
+--     total_de_estudantes INTEGER;
+-- BEGIN
+--     SELECT COUNT(*) INTO total_de_estudantes FROM tb_projeto WHERE GENDER = p_gender;
+
+--     SELECT COUNT(*) INTO grade1_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 1;
+--     grade1_percent := (grade1_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade2_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 2;
+--     grade2_percent := (grade2_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade3_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 3;
+--     grade3_percent := (grade3_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade4_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 4;
+--     grade4_percent := (grade4_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade5_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 5;
+--     grade5_percent := (grade5_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade6_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 6;
+--     grade6_percent := (grade6_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade7_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 7;
+--     grade7_percent := (grade7_percent::NUMERIC / total_de_estudantes) * 100;
+
+--     SELECT COUNT(*) INTO grade8_percent FROM tb_projeto WHERE GENDER = p_gender AND GRADE = 8;
+--     grade8_percent := (grade8_percent::NUMERIC / total_de_estudantes) * 100;
+-- END; $$
+-- LANGUAGE plpgsql;
+
+-- DO $$
+-- DECLARE
+--     grade1_percent NUMERIC(10, 2);
+--     grade2_percent NUMERIC(10, 2);
+--     grade3_percent NUMERIC(10, 2);
+--     grade4_percent NUMERIC(10, 2);
+--     grade5_percent NUMERIC(10, 2);
+--     grade6_percent NUMERIC(10, 2);
+--     grade7_percent NUMERIC(10, 2);
+--     grade8_percent NUMERIC(10, 2);
+-- BEGIN
+--     CALL sp_percentuais(1, grade1_percent, grade2_percent, grade3_percent, grade4_percent, grade5_percent, grade6_percent, grade7_percent, grade8_percent);
+--     RAISE NOTICE 'Percentuais de notas para o sexo: %, %, %, %, %, %, %, %', grade1_percent, grade2_percent, grade3_percent, grade4_percent, grade5_percent, grade6_percent, grade7_percent, grade8_percent;
+-- END $$;
 
 -- -- 1.4.2 Exibe o percentual de estudantes de cada sexo.
 -- DROP PROCEDURE sp_percentual_genero
